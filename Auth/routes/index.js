@@ -16,6 +16,10 @@ app.use(bodyParser.urlencoded({
   extended: true
 }))
 
+var listener = app.listen(3000, function(){
+  console.log('Listening on port ' + listener.address().port); //Listening on port 8888
+});
+
 // console.log(__dirname)
 /*Setting up fundamental variables */
 var refreshTokens = {}
@@ -141,7 +145,7 @@ function dbRefreshTokenCheck(username, refreshToken) {
 
 /* Refresh the JWT using refresh Token */
 router.get('/refresh', function (req, res, next) {
-  console.log(res.cookies)
+  console.log("cookie"+req.cookies)
   var refresh = req.cookies.refreshToken
   if (!refresh) {
     res.send("No refresh token found")
@@ -151,11 +155,10 @@ router.get('/refresh', function (req, res, next) {
     if (err) {
       res.send("please login again")
     }
-
-    var db_user = dbRefreshTokenCheck(decoded['username'], decoded['refreshToken']);
+    var db_user = dbRefreshTokenCheck(decoded.username, decoded.refreshToken);
     if (db_user) {
       var user = {
-        'username': username,
+        'username': decoded.username,
         'role': 'admin'
       };
       var jwtToken = jwt.sign(user, privateKEY, signOptionsRT);
