@@ -16,9 +16,8 @@ app.use(bodyParser.urlencoded({
   extended: true
 }))
 
-var listener = app.listen(3000, function(){
-  console.log('Listening on port ' + listener.address().port); //Listening on port 8888
-});
+// const PORT = 8080;
+// const HOST = '0.0.0.0';
 
 // console.log(__dirname)
 /*Setting up fundamental variables */
