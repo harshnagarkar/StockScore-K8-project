@@ -44,7 +44,7 @@ spec:
       serviceAccountName: stockstud-auth
       containers:
       - name: auth
-        image: docker.io/istio/examples-bookinfo-ratings-v1:1.15.0
+        image: hknagark/auth:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
