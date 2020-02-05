@@ -64,7 +64,7 @@ var verifyOptionsRT = {
 
 
 /* GET home page. */
-router.get('/', function (req, res, next) {
+router.get('/auth', function (req, res, next) {
   res.render('index', {
     title: 'Express'
   });
@@ -84,7 +84,7 @@ function createRefreshToken(username) {
 }
 
 /* Login post route  */
-router.post('/login', function (req, res, next) {
+router.post('/auth/login', function (req, res, next) {
 
   console.log(req.body)
   var username = req.body.username;
@@ -127,7 +127,7 @@ function revokeToken(username) {
 }
 
 /* Logout post route */
-router.get('/logout', function (req, res, next) {
+router.get('/auth/logout', function (req, res, next) {
   var token = req.cookies.token;
   var refreshToken = req.cookies.refreshToken;
   revokeToken(username);
@@ -143,7 +143,7 @@ function dbRefreshTokenCheck(username, refreshToken) {
 }
 
 /* Refresh the JWT using refresh Token */
-router.get('/refresh', function (req, res, next) {
+router.get('/auth/refresh', function (req, res, next) {
   console.log("cookie"+req.cookies)
   var refresh = req.cookies.refreshToken
   if (!refresh) {
@@ -175,7 +175,7 @@ router.get('/refresh', function (req, res, next) {
 })
 
 /* Test verify function */
-router.get('/verify', function (req, res, next) {
+router.get('/auth/verify', function (req, res, next) {
   var token = req.cookies.token;
   console.log(token)
   if (!token) {
