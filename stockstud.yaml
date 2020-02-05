@@ -44,7 +44,7 @@ spec:
       serviceAccountName: stockstud-auth
       containers:
       - name: auth
-        image: hknagark/auth:latest
+        image: docker.io/hknagark/auth:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
