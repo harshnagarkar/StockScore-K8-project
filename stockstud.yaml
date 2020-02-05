@@ -1,0 +1,51 @@
+##################################################################################################
+# Auth service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  labels:
+    app: auth
+    service: auth
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: auth
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-auth
+  labels:
+    account: auth
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-v1
+  labels:
+    app: auth
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: auth
+        version: v1
+    spec:
+      serviceAccountName: stockstud-auth
+      containers:
+      - name: auth
+        image: docker.io/istio/examples-bookinfo-ratings-v1:1.15.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+---
