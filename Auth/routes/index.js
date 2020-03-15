@@ -228,8 +228,8 @@ router.get('/auth/logout', function (req, res, next) {
         res.sendStatus(500);
       }else{
         console.log("Deleting the cookie from the browser");
-        res.cookie('refreshToken',{expires: Date.now()});
-        res.cookie('token',{expires: Date.now()});
+        res.cookie('refreshToken',{expires: Date.now(0)});
+        res.cookie('token',{expires: Date.now(0)});
         res.sendStatus(200);
       }
     });
@@ -257,7 +257,7 @@ router.get('/auth/refresh', function (req, res, next) {
 
   jwt.verify(refresh, publicKEY, verifyOptionsRT, function (err, decoded) {
     if (err) {
-      console.log(err)
+      // console.log(err)
       res.sendStatus(401)
     }
     dbRefreshTokenCheck(decoded.username, decoded.refreshToken,function(err,result){
