@@ -12,6 +12,8 @@ spec:
   ports:
   - port: 8080
     name: http
+  - port: 3306
+    name: mysql
   selector:
     app: auth
 ---

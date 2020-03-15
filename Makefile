@@ -1,2 +1,2 @@
 build:
-	docker build -t auth/prelimanary Auth
+	docker build -t hknagark/auth Auth
