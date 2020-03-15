@@ -206,7 +206,7 @@ router.post('/auth/login', function (req, res, next) {
 
 /* Delete Refresh Token from DB */
 function revokeToken(email,callback) {
-  writeconnection.query(`DELETE FROM \`Auth_token\` WHERE User_email = ${email}`, function (err, result, fields) {
+  writeconnection.query(`DELETE FROM \`Auth_token\` WHERE User_email = '${email}'`, function (err, result, fields) {
     if (err) {
       callback(err,null);
     };
@@ -224,10 +224,12 @@ router.get('/auth/logout', function (req, res, next) {
     }
     revokeToken(decoded.email,function(err,result){
       if(err){
+        console.log("this is a error in delete revoke token",err);
         res.sendStatus(500);
       }else{
-        res.cookie('refreshToken',{expires: Date.now()})
-        res.cookie('token',{expires: Date.now()})
+        console.log("Deleting the cookie from the browser");
+        res.cookie('refreshToken',{expires: Date.now()});
+        res.cookie('token',{expires: Date.now()});
         res.sendStatus(200);
       }
     });
@@ -236,7 +238,7 @@ router.get('/auth/logout', function (req, res, next) {
 
 /* Checking Database for refresh Token */
 function dbRefreshTokenCheck(email, refreshToken,callback) {
-  readconnection.query(`select User_email,refresh_token from Auth_token where User_email='${email} and refresh_token=${refreshToken}`, function (err, result, fields) {
+  readconnection.query(`select User_email,refresh_token from Auth_token where User_email='${email}' and refresh_token='${refreshToken}'`, function (err, result, fields) {
     if (err || result.length == 0) {
       callback(err,null);
     }else{
