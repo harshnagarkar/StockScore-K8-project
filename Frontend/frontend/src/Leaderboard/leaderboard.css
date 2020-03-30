@@ -1,0 +1,10 @@
+.container{
+    padding: 2em
+}
+
+.center{
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+    align-self: center;
+}

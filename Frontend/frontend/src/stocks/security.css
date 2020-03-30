@@ -1,0 +1,38 @@
+
+h4{
+    font-size: 1.25em;
+}
+
+.container{
+    padding: 3em;
+}
+
+.graph{
+    min-height: 20em;
+}
+
+.icons{
+    font-size: 2em;
+    padding-bottom: 3em;
+}
+
+.center{
+    justify-content: center;
+    text-emphasis: center;
+    align-self: center;
+    align-items: center;
+}
+
+.stockname{
+    font-size: 1.25em;
+    padding: 0.5em;
+}
+
+.metric{
+    font-size: 2em;
+    padding: 0.25em;
+}
+
+.comment{
+    font-size: 1.25em;
+}

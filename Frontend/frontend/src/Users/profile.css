@@ -1,0 +1,14 @@
+.container{
+    padding: 3em;
+}
+.profileImage{
+    max-width: 20em;
+    padding: 1em;
+
+}
+
+.center{
+    text-align: center;
+    align-items: center;
+    align-self: center;
+}
