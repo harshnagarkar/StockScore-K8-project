@@ -2,6 +2,11 @@ import urllib.request
 import schedule
 import time
 import json
+from influxdb import InfluxDBClient
+import pytz
+import datetime
+
+# CST=pytz.timezone('America/Chicago')
 
 f = open("alphavantage.txt", "r")
 alphavantageKey=f.readline()
@@ -13,77 +18,53 @@ line=line.replace("\\s+","")
 symbols=line.split(",")
 
 
-client = InfluxDBClient(host='influxdb-1-influxdb-svc.influxdb.svc.cluster.local', port=8086, username='suser', password='mwxe2H3f8KybN', ssl=True, verify_ssl=True)
+client = InfluxDBClient(host='influxdb-1-influxdb-svc.influxdb.svc.cluster.local', port=8086, username='suser', password='mwxe2H3f8KybN')
 client.switch_database('stocks')
 
 
-# json_body = [
-#     {
-#         "measurement": "brushEvents",
-#         "tags": {
-#             "user": "Carol",
-#             "brushId": "6c89f539-71c6-490d-a28d-6c5d84c0ee2f"
-#         },
-#         "time": "2018-03-28T8:01:00Z",
-#         "fields": {
-#             "duration": 127
-#         }
-#     },
-#     {
-#         "measurement": "brushEvents",
-#         "tags": {
-#             "user": "Carol",
-#             "brushId": "6c89f539-71c6-490d-a28d-6c5d84c0ee2f"
-#         },
-#         "time": "2018-03-29T8:04:00Z",
-#         "fields": {
-#             "duration": 132
-#         }
-#     },
-#     {
-#         "measurement": "brushEvents",
-#         "tags": {
-#             "user": "Carol",
-#             "brushId": "6c89f539-71c6-490d-a28d-6c5d84c0ee2f"
-#         },
-#         "time": "2018-03-30T8:02:00Z",
-#         "fields": {
-#             "duration": 129
-#         }
-#     }
-# ]
+def generateJSON(ticker,interval,last_refresh,time,feild_dict):
+    json_body =[{
+        "measurement": f"{ticker}",
+        "tags": {
+            "Interval": f"{interval}",
+            "Last_Refresh": f"{last_refresh}"
+        },
+        "time": f"{time}",
+        "fields": {
+        }
+    }]
+    for k,v in feild_dict.items():
+         json_body[0]['fields'][k]=json.dumps(v)
+    return json_body
 
-
-
-for symb in symbols[0:1]:
-    symb=symb.replace(" ","")
-    try:
+def update_database():
+    print("started updating")
+    for symb in symbols:
+        symb=symb.replace(" ","")
+        # try:
         url="https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol="+symb+"&interval=1min&apikey="+str(alphavantageKey)
         with urllib.request.urlopen(url) as url:
             data = json.loads(url.read())
-            json_body ={
-                "measurement": data['Meta Data']['2. Symbol'],
-                "tags": {
-                    "Interval": data['Meta Data']['4. Interval'],
-                    "Last_Refresh": data['Meta Data']['3. Last Refreshed']
-                },
-                "time": "2018-03-30T8:02:00Z",
-                "fields": {
-                    "Time_Series": list(dict(data['Time Series (1min)']).values())
-                }
-            }
-            client.drop_measurement(symb)
+            update_time = data['Meta Data']['3. Last Refreshed'].replace(" ",'T')+'Z'
+            json_body=generateJSON(data['Meta Data']['2. Symbol'],data['Meta Data']['4. Interval'],data['Meta Data']['3. Last Refreshed'],update_time,data['Time Series (1min)'])
+            # json_body=generateJSON("test",data['Meta Data']['4. Interval'],data['Meta Data']['3. Last Refreshed'],time,{"harsh":{"test":"test","harsh123":"maybe"}})
+            # m=json.load(json_body[0])
+            # client.drop_measurement(symb)
             tries=3
+            print(json_body)
             while client.write_points(json_body) and tries>=0:
                 tries=tries-1
-    except:
-        print("error")    
-    time.sleep(15) 
+            print("Updated the tocker for-", symb,"-for-",data['Meta Data']['3. Last Refreshed']," updated on",datetime.datetime.now())
+        # except Exception as e: print(e) 
+        time.sleep(15) 
     
+schedule.every().tuesday.at("06:00").do(update_database)
+schedule.every().wednesday.at("06:00").do(update_database)
+schedule.every().thursday.at("06:00").do(update_database)
+schedule.every().friday.at("06:00").do(update_database)
+schedule.every().saturday.at("06:00").do(update_database)
 
-
-# schedule.every(1).minutes.do(myfunc)
-
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
+while True:
+    schedule.run_pending()
+    time.sleep(10)
+    print("printing")
