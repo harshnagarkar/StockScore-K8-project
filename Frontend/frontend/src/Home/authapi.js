@@ -16,8 +16,8 @@ export const login=async (email,password,callback)=>{
 }
 
 
-export const createAccount=async(email,password,callback)=>{
-  await axios.post(`http://35.238.192.112/auth/createAccount`,{"email":email,"password":password})
+export const createAccount=async(email,password,name,callback)=>{
+  await axios.post(`http://35.238.192.112/auth/createAccount`,{"email":email,"password":password,"name":name})
     .then(res => {
       if(res.status==200){
         callback(true,null)

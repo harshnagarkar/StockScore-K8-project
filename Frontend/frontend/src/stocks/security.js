@@ -17,6 +17,7 @@ class StockPage extends React.Component{
     }
 
     render(){
+        console.log(`CURRENCYCOM:${this.props.match.params.stockid}`);
         return <div className="container">
         <Row type="flex" justify="center">
             <Col className="center">
@@ -25,7 +26,7 @@ class StockPage extends React.Component{
             </Row>
             <Row type="flex" justify="center">
             <Col className="center" >
-            <TradingViewWidget symbol={`NASDAQ:${this.props.match.params.stockid}`}/>
+            <TradingViewWidget symbol={`CURRENCYCOM:${this.props.match.params.stockid}`}/>
             </Col>
             </Row>
             <Row type="flex" justify="center">

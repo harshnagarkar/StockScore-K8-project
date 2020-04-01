@@ -15,37 +15,39 @@ class StockDashboard extends React.Component{
       defaultData:[]
     }
 
-    componentDidMount=()=>{
-      const url=`http://35.238.192.112/stocks/search/?term=}`
-      axios.get(url)
-          .then(res => {
-            if(res.status==200){
-              this.setState({defaultData:res.stocks})
+    componentDidMount= async ()=>{
+      const url=`http://35.238.192.112/stocks/search/?term=`
+      await axios.get(url)
+          .then((response) => {
+            console.log("This",response.data)
+            if(response.status==200){
+              this.setState({defaultData:response.data.stocks})
             }else{
-              console.log(res)
+              console.log(response)
             }
-          }).catch(res=>{
-              console.log(res)
+          }).catch((response)=>{
+              console.log(response)
           })
 
      
     }
 
     storeSearchData=async (word)=>{
-          
-          const url=`http://35.238.192.112/stocks/search/search?term=${word.toUpperCase()}`
-          await axios.get(url)
-              .then(res => {
-                if(res.status==200){
-                  this.setState({searchValue:word,searchData:res.stocks})
-                  if(res && res.stocks.length===0){
+      console.log('Word is'+word.toUpperCase())
+          const urldata=`http://35.238.192.112/stocks/search/?term=${word.toUpperCase()}`
+          await axios.get(urldata)
+              .then((response) => {
+                if(response.status==200){
+                  this.setState({searchValue:word,searchData:response.data.stocks})
+                  console.log(response.data.stocks)
+                  if(response.data.stocks.length===0){
                     alert("No stock similar to name found, loading the default values");
                   }
                 }else{
-                  console.log(res)
+                  console.log(response)
                 }
-              }).catch(res=>{
-                  console.log(res)
+              }).catch((response)=>{
+                  console.log(response)
               })
           
     }
@@ -54,7 +56,7 @@ class StockDashboard extends React.Component{
       let searchDiv=null
       if(this.state.searchData.length!==0){
        searchDiv=this.state.searchData.map((data,index)=><div key={index}><a href={`/stock/${data}`} >{data}</a><Divider/></div>)
-      }else{
+      }else if(this.state.defaultData!==0){
         searchDiv=this.state.defaultData.map((data,index)=><div key={index}><a href={`/stock/${data}`} >{data}</a><Divider/></div>)
       }
        return <div className="container"><Row type="flex" justify="center">

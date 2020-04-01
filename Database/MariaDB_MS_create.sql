@@ -1,11 +1,11 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2020-02-25 02:14:31.098
+-- Last modification date: 2020-04-01 04:59:07.854
 
 -- tables
 -- Table: Auth_token
 CREATE TABLE Auth_token (
     User_email varchar(255) NOT NULL,
-    refresh_token varchar(255) NOT NULL,
+    refresh_token varchar(256) NOT NULL,
     expiry timestamp NOT NULL,
     CONSTRAINT Auth_token_pk PRIMARY KEY (User_email)
 );
@@ -26,23 +26,34 @@ CREATE TABLE Following (
     CONSTRAINT Following_pk PRIMARY KEY (id)
 );
 
+-- Table: Password_Reset
+CREATE TABLE Password_Reset (
+    User_email varchar(255) NOT NULL,
+    code varchar(20) NULL,
+    CONSTRAINT Password_Reset_pk PRIMARY KEY (User_email)
+);
+
 -- Table: Stock_Collection
 CREATE TABLE Stock_Collection (
     User_email varchar(255) NOT NULL,
-    vote bool NULL,
+    stock varchar(6) NOT NULL,
+    vote bool NOT NULL,
     vote_price int NULL,
     vote_datetime timestamp NULL,
     recent_predictions int NULL,
     total_predictiond int NULL,
     correct_prediction int NULL,
-    CONSTRAINT Stock_Collection_pk PRIMARY KEY (User_email)
+    CONSTRAINT Stock_Collection_pk PRIMARY KEY (User_email,stock)
 );
 
 -- Table: User
 CREATE TABLE User (
     email varchar(255) NOT NULL,
-    password varchar(128) NOT NULL,
-    reputation int NOT NULL,
+    password varchar(128) NULL,
+    reputation int NOT NULL DEFAULT 1,
+    totalprediction int NOT NULL DEFAULT 0,
+    correctpredictions int NOT NULL DEFAULT 0,
+    name varchar(200) NOT NULL,
     CONSTRAINT User_pk PRIMARY KEY (email)
 );
 
@@ -57,6 +68,10 @@ ALTER TABLE Followers ADD CONSTRAINT Followers_User FOREIGN KEY Followers_User (
 
 -- Reference: Following_User (table: Following)
 ALTER TABLE Following ADD CONSTRAINT Following_User FOREIGN KEY Following_User (User_email)
+    REFERENCES User (email);
+
+-- Reference: Password_Reset_User (table: Password_Reset)
+ALTER TABLE Password_Reset ADD CONSTRAINT Password_Reset_User FOREIGN KEY Password_Reset_User (User_email)
     REFERENCES User (email);
 
 -- Reference: Stock_Collection_User (table: Stock_Collection)

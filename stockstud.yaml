@@ -1,4 +1,22 @@
 ##################################################################################################
+# Name Spaces
+##################################################################################################
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stockapi
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rabbitmq
+---
+##################################################################################################
 # Auth service
 ##################################################################################################
 apiVersion: v1
@@ -27,27 +45,193 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-v1
+  name: auth-v2
   labels:
     app: auth
-    version: v1
+    version: v2
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: auth
-      version: v1
+      version: v2
   template:
     metadata:
       labels:
         app: auth
-        version: v1
+        version: v2
     spec:
       serviceAccountName: stockstud-auth
       containers:
       - name: auth
         image: docker.io/hknagark/auth:latest
-        imagePullPolicy: IfNotPresent
+        #imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  
+---
+##################################################################################################
+# Stock API service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockapi
+  namespace: stockapi
+  labels:
+    app: stockapi
+    service: stockapi
+spec:
+  ports:
+  - port: 8080
+    name: http
+  - port: 8086
+    name: influx
+  selector:
+    app: stockapi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-stockapi
+  namespace: stockapi
+  labels:
+    account: stock
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapi-v1
+  namespace: stockapi
+  labels:
+    app: stockapi
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockapi
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: stockapi
+        version: v1
+    spec:
+      serviceAccountName: stockstud-stockapi
+      containers:
+      - name: stockapi
+        image: docker.io/hknagark/stockapi:latest
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080  
+---
+##################################################################################################
+# Stock fetch service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockfetch
+  namespace: stockapi
+  labels:
+    app: stockfetch
+    service: stockfetch
+spec:
+  ports:
+  - port: 80
+    name: http
+  - port: 8086
+    name: influx
+  selector:
+    app: stockfetch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-stockfetch
+  namespace: stockapi
+  labels:
+    account: stockfetch
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockfetch-v1
+  namespace: stockapi
+  labels:
+    app: stockfetch
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockfetch
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: stockfetch
+        version: v1
+    spec:
+      serviceAccountName: stockstud-stockfetch
+      containers:
+      - name: stockfetch
+        image: docker.io/hknagark/stockfetch:latest
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80  
+---
+##################################################################################################
+# frontend
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: frontend
+  labels:
+    app: frontend
+    service: frontend
+spec:
+  ports:
+  - port: 80
+    name: http
+  selector:
+    app: frontend
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-frontend
+  namespace: frontend
+  labels:
+    account: frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-v1
+  namespace: frontend
+  labels:
+    app: frontend
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: v1
+    spec:
+      serviceAccountName: stockstud-frontend
+      containers:
+      - name: frontend
+        image: docker.io/hknagark/frontend:latest
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80 
 ---

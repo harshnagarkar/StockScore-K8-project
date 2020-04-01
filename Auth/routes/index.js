@@ -135,9 +135,9 @@ function createRefreshToken(email, callback) {
 };
 
 
-function createAccount(email, password,callback) {
+function createAccount(email, password,name,callback) {
   let hash = bcrypt.hashSync(password, 10);
-  writeconnection.query(`INSERT INTO \`User\` (email,password,reputation) VALUES ('${email}','${hash}',1)`, function (err, result, fields) {
+  writeconnection.query(`INSERT INTO \`User\` (email,password,name) VALUES ('${email}','${hash}','${name}')`, function (err, result, fields) {
     if (err) {
       callback(err, null);
     };
@@ -148,8 +148,10 @@ function createAccount(email, password,callback) {
 router.post('/auth/createAccount', function (req, res, next) {
   let email = req.body.email;
   let password = req.body.password;
-  createAccount(email, password,function(err,result){
+  let name = req.body.name;
+  createAccount(email, password,name,function(err,result){
     if(err){
+      console.log(err);
       res.sendStatus(500);
     }else{
       res.sendStatus(200);
@@ -193,7 +195,7 @@ router.post('/auth/login', function (req, res, next) {
           });
           res.cookie('token', jwtToken, {
             maxAge: 180000,
-            httpOnly: true
+            httpOnly: false
           });
           res.sendStatus(200);
         }
@@ -228,8 +230,8 @@ router.get('/auth/logout', function (req, res, next) {
         res.sendStatus(500);
       }else{
         console.log("Deleting the cookie from the browser");
-        res.cookie('refreshToken',{expires: Date.now(0)});
-        res.cookie('token',{expires: Date.now(0)});
+        res.clearCookie('refreshToken')
+        res.clearCookie('token')
         res.sendStatus(200);
       }
     });
@@ -271,7 +273,7 @@ router.get('/auth/refresh', function (req, res, next) {
         var jwtToken = jwt.sign(user, privateKEY, signOptionsRT);
         res.cookie('token', jwtToken, {
           maxAge: 180000,
-          httpOnly: true
+          httpOnly: false
         });
         res.send('200');
       }

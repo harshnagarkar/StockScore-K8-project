@@ -8,6 +8,12 @@ spec:
   servers:
   - port:
       number: 80
+      name: https
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
       name: http
       protocol: HTTP
     hosts:
@@ -25,9 +31,23 @@ spec:
   http:
   - match:
     - uri:
-        exact: /auth
+        prefix: /auth
     route:
     - destination:
         host: auth
         port:
           number: 8080
+  - match:
+    - uri:
+        prefix: /stocks
+    route:
+    - destination:
+        host: stockapi.stockapi.svc.cluster.local
+        port:
+          number: 8080
+  - route:
+    - destination: 
+        host: frontend.frontend.svc.cluster.local
+        port:
+          number: 80
+---
