@@ -129,8 +129,12 @@ router.get("/vote/:stock", function (req, res, next) {
             console.log(err)
             res.sendStatus(400);
           }
-          console.log(result);
-          res.json(result);
+          if(result[0]){
+            res.json(result[0]);
+          }else{
+            res.json({vote:0})
+          }
+          
         }
       );
     }
@@ -152,8 +156,8 @@ function stockpredictedtoday(email, stock, callback) {
         console.log(err)
         res.sendStatus(400);
       }
-      console.log(result[0],"->",result[0].vote," ",result[0].length)
-      if (result[0].vote) {
+      if (result[0]!=null && result[0].vote!=null) {
+        console.log(result[0],"->",result[0].vote," ",result[0].length)
         callback(true, result[0].vote, null);
       } else {
         callback(null, null, true);
@@ -217,16 +221,25 @@ router.post("/vote/:stock", function (req, res, next) {
           );
         } else if (notvoted) {
           writeconnection.query(
-            `INSERT INTO \`Stock_Collection\` (User_email,stock,vote,vote_datetime) VALUES ('${decoded.email}','${req.params.stock}',${value},NOW())  ON DUPLICATE KEY UPDATE vote='${value}', vote_datetime=NOW()`,
+            `INSERT INTO \`Stock_Collection\` (User_email,stock,vote,vote_datetime,total_predictions) VALUES ('${decoded.email}','${req.params.stock}',${value},NOW(),1)  ON DUPLICATE KEY UPDATE vote='${value}', vote_datetime=NOW(),total_predictions=total_predictions+1`,
             function (err, result, fields) {
               if (err) {
                 console.log(err)
                 res.sendStatus(400);
               }
               // console.log(result);
-              res.json(200);
-            }
-          );
+              // res.json(200);
+            });
+            writeconnection.query(
+              `UPDATE User set total_predictions=total_predictions+1 where email='${decoded.email}'`,
+              function (err, result, fields) {
+                if (err) {
+                  console.log(err)
+                  res.sendStatus(500);
+                }
+                // console.log(result);
+                res.json(200);
+              });
         }
       });
     }
