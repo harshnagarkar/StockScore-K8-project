@@ -51,11 +51,17 @@ var options = {
   },
 };
 
+
+process.env.TZ = 'America/Chicago' 
+
+
+
 var readconnection = mysql.createConnection({
   host: "mariadb-1-mariadb-secondary.mariadb.svc.cluster.local",
   user: "Suser",
   password: "<mwxe2H/3f8Kyb$N",
   database: "stockUser",
+  timezone: 'America/Chicago'
 });
 
 readconnection.connect(function (err) {
@@ -69,6 +75,7 @@ var writeconnection = mysql.createConnection({
   user: "Suser",
   password: "<mwxe2H/3f8Kyb$N",
   database: "stockUser",
+  timezone: 'America/Chicago'
 });
 
 writeconnection.connect(function (err) {
@@ -91,20 +98,35 @@ router.get("/vote", function (req, res, next) {
   );
 });
 
+function showdatelimit(){
+  let today = new Date();
+  today.setDate(today.getDate()-1)
+  let dd = String(today.getDate()).padStart(2, '0');
+  let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  let yyyy = today.getFullYear();
+
+  today = yyyy + '-' + mm + '-' + dd+"  06:00:00";
+  return today;
+}
+
+
 router.get("/vote/:stock", function (req, res, next) {
+  
   if (!stocksData.has(req.params.stock)) {
     res.sendStatus(501);
   }
   console.log(req.params);
-  var token = req.cookies.token;
+  let token = req.cookies.token;
   jwt.verify(token, publicKEY, verifyOptionsJWT, function (err, decoded) {
     if (err) {
       res.sendStatus(401);
     } else {
+      console.log(decoded)
       readconnection.query(
-        `Select vote from Stock_Collection where User_email='${decoded.email}' and stock='${request.params.stock}'`,
+        `Select vote from Stock_Collection where User_email='${decoded.email}' and stock='${req.params.stock}' and (vote_datetime BETWEEN '${showdatelimit()}' AND NOW())`,
         function (err, result, fields) {
           if (err) {
+            console.log(err)
             res.sendStatus(400);
           }
           console.log(result);
@@ -115,17 +137,26 @@ router.get("/vote/:stock", function (req, res, next) {
   });
 });
 
-function stockpredictedtoday(today, email, stock, callback) {
+function stockpredictedtoday(email, stock, callback) {
+  let today = new Date();
+  today.setDate(today.getDate())
+  let dd = String(today.getDate()).padStart(2, '0');
+  let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  let yyyy = today.getFullYear();
+
+  today = yyyy + '-' + mm + '-' + dd
   readconnection.query(
-    `Select vote,vote_datetime from Stock_Collection where User_email='${email}' and stock='${stock} and where game_date between '${startdate} 08:30:00' and '2012-05-11 19:00:00' '`,
+    `Select vote,vote_datetime from Stock_Collection where User_email='${email}' and stock='${stock}' and  vote_datetime between '${today} 06:00:00' and '${today} 19:00:00'`,
     function (err, result, fields) {
       if (err) {
+        console.log(err)
         res.sendStatus(400);
       }
-      if (result.length !== 0) {
-        callback(True, result.vote, null);
+      console.log(result[0],"->",result[0].vote," ",result[0].length)
+      if (result[0].vote) {
+        callback(true, result[0].vote, null);
       } else {
-        callback(null, null, True);
+        callback(null, null, true);
       }
     }
   );
@@ -146,42 +177,54 @@ function getVote(vote) {
   return null;
 }
 
+function checkVotedatetime(){
+  let today = new Date();
+  if(today.getDay() == 6 || today.getDay() == 0 || today.getHours()<6 || today.getHours()>19 ){
+    return false
+  }
+  return True
+}
+
 router.post("/vote/:stock", function (req, res, next) {
-  console.log(req.body);
+  if(!checkVotedatetime){
+    res.send(405)
+  }
   if (!stocksData.has(req.params.stock)) {
     res.sendStatus(501);
   }
   req.body.vote;
-  var token = req.cookies.token;
+  let token = req.cookies.token;
   jwt.verify(token, publicKEY, verifyOptionsJWT, function (err, decoded) {
     if (err) {
       res.sendStatus(401);
     } else {
-      stockpredictedtoday(function (voted, vote, notvoted) {
+      let value = getVote(req.body.vote);
+      if (value===null) {
+        res.send(400);
+      }
+      stockpredictedtoday(decoded.email,req.params.stock,function (voted, vote, notvoted) {
         if (voted) {
-          let value = adjustedvotevalue(request.body.vote, vote);
+          console.log("updated---------------------------------------")
+          let value = adjustedvotevalue(req.body.vote, vote);
           writeconnection.query(
-            `Update Stock_Collection set vote=${value}`,
+            `Update Stock_Collection set vote=${value} where User_email='${decoded.email}' and stock='${req.params.stock}'`,
             function (err, result) {
               if (err) {
-                return res.sendStatus(500);
+                res.sendStatus(500);
               }
-              return res.statusCode(200);
+              res.sendStatus(200);
             }
           );
         } else if (notvoted) {
-          let value = getVote(request.body.vote);
-          if (!value) {
-            res.send(400);
-          }
           writeconnection.query(
-            `INSERT INTO \`Stock_Collection\` (User_email,stock,vote,vote_datetime) VALUES ('${email}','${request.params.stock},${value},NOW()')`,
+            `INSERT INTO \`Stock_Collection\` (User_email,stock,vote,vote_datetime) VALUES ('${decoded.email}','${req.params.stock}',${value},NOW())  ON DUPLICATE KEY UPDATE vote='${value}', vote_datetime=NOW()`,
             function (err, result, fields) {
               if (err) {
+                console.log(err)
                 res.sendStatus(400);
               }
-              console.log(result);
-              res.json(result);
+              // console.log(result);
+              res.json(200);
             }
           );
         }
