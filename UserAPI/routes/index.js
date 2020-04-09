@@ -126,11 +126,11 @@ router.get("/user/data", function(req, res, next) {
       res.sendStatus(401);
     } else {
       readconnection.query(
-        "Select reputation,correctprediction,prediction,profile from User where email='" + decoded.email + "'",
+        "Select accuracy,correct_predictions,total_predictions,profileimage from User where email='" + decoded.email + "'",
         function(err, result, fields) {
           if (err) res.sendStatus(500);
           console.log(decoded.email, " ", result);
-          res.json(result)
+          res.json(result[0])
         }
       );
     }
