@@ -39,7 +39,7 @@ var verifyOptionsJWT = {
 };
 
 var options = {
-  root: path.join(__dirname, "../data"),
+  root: '/mnt/',
   dotfiles: "deny",
   headers: {
     "x-timestamp": Date.now(),
@@ -50,7 +50,7 @@ var options = {
 //----------------------------------------------fileupload-------------------------------------------------------------------------------
 var storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, path.join(__dirname, "../data")); //here we specify the destination. in this case i specified the current directory
+    cb(null, "/mnt"); //here we specify the destination. in this case i specified the current directory
   },
   filename: function(req, file, cb) {
     console.log(file); //log the file object info in console
@@ -62,15 +62,16 @@ var storage = multer.diskStorage({
 var uploadDisk = multer({ 
   storage: storage,
   fileFilter: function (req, file, callback) {
-    var ext = path.extname(file.originalname);
-    if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
-        return callback(new Error('Only images are allowed'))
-    }
+    // var ext = path.extname(file.originalname);
+    // if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+    //     return callback(new Error('Only images are allowed'))
+    // }
     callback(null, true)
-    },
-    limits:{
-        fileSize: 1024 * 1024
     }
+    // ,
+    // limits:{
+    //     fileSize: 1024 * 1024 * 5
+    // }
 });
 
 //----------------------------------database---------------------------------------------------------------
@@ -104,12 +105,12 @@ readconnection.connect(function(err) {
 //----------------------------------------------------------------------------------------------------------------------
 function  authcheck(req,res,next){
   var token = req.cookies.token;
-  console.log(req.body.image)
+  console.log("auth check")
   jwt.verify(token, publicKEY, verifyOptionsJWT, function(err, decoded) {
     if (err) {
       res.sendStatus(401)
     } else {
-      next()
+      next(decoded)
     }
   });
  };
@@ -138,15 +139,27 @@ router.get("/user/data", function(req, res, next) {
 });
 
 router.post("/user/uploadimage",authcheck,uploadDisk.single("image"),function(req,res,next){
+  console.log("in function")
+  var token = req.cookies.token;
+  jwt.verify(token, publicKEY, verifyOptionsJWT, function(err, decoded) {
+    if (err) {
+      res.sendStatus(401);
+    } else {
+      console.log("upload image")
   writeconnection.query(
-    "INSERT INTO \`User\` (profileimage) VALUES ("+req.filename+")  ON DUPLICATE KEY UPDATE profilename='" + req.filename + "'",
+    "INSERT INTO \`User\` (profileimage) VALUES ("+req.filename+") where email='"+decoded.email+"'  ON DUPLICATE KEY UPDATE profileimage='" + req.filename + "'",
     function(err, result, fields) {
-      if (err) res.sendStatus(500);
+      if (err){
+      console.log(err)
+      res.sendStatus(500)
+    };
       console.log(decoded.email, " ", result);
       console.log(req.filename)
       res.sendStatus(200)
     }
-  );  
+  );
+    } 
+})
 })
 
 router.get("/user/image/:name", function(req, res, next) {

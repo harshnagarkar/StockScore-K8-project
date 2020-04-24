@@ -262,12 +262,12 @@ router.get('/auth/refresh', function (req, res, next) {
       // console.log(err)
       res.sendStatus(401)
     }
-    dbRefreshTokenCheck(decoded.username, decoded.refreshToken,function(err,result){
+    dbRefreshTokenCheck(decoded.email, decoded.refreshToken,function(err,result){
       if(err){
         res.sendStatus(401)
       }else{
         var user = {
-          'username': decoded.username,
+          'email': decoded.email,
           'role': 'admin'
         };
         var jwtToken = jwt.sign(user, privateKEY, signOptionsRT);

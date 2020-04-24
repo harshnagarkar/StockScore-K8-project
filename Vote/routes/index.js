@@ -61,7 +61,8 @@ var readconnection = mysql.createConnection({
   user: "Suser",
   password: "<mwxe2H/3f8Kyb$N",
   database: "stockUser",
-  timezone: 'America/Chicago'
+  timezone: 'US/Central',
+  // dateStrings : true
 });
 
 readconnection.connect(function (err) {
@@ -70,12 +71,23 @@ readconnection.connect(function (err) {
   }
 });
 
+readconnection.query(
+  `set time_zone="America/Chicago"`,
+  function (err, result, fields) {
+    if (err) {
+      console.log(err)
+      res.sendStatus(400);
+    }
+    console.log(result);
+  });
+
 var writeconnection = mysql.createConnection({
   host: "mariadb-1-mariadb.mariadb.svc.cluster.local",
   user: "Suser",
   password: "<mwxe2H/3f8Kyb$N",
   database: "stockUser",
-  timezone: 'America/Chicago'
+  timezone: 'US/Central',
+  // dateStrings : true
 });
 
 writeconnection.connect(function (err) {
@@ -83,6 +95,17 @@ writeconnection.connect(function (err) {
     console.log("error when connecting to db:", err);
   }
 });
+
+
+writeconnection.query(
+  `set time_zone="America/Chicago"`,
+  function (err, result, fields) {
+    if (err) {
+      console.log(err)
+      res.sendStatus(400);
+    }
+    console.log(result);
+  });
 
 /* GET home page. */
 router.get("/vote", function (req, res, next) {
@@ -106,6 +129,7 @@ function showdatelimit(){
   let yyyy = today.getFullYear();
 
   today = yyyy + '-' + mm + '-' + dd+"  06:00:00";
+  console.log(today)
   return today;
 }
 
@@ -147,8 +171,8 @@ function stockpredictedtoday(email, stock, callback) {
   let dd = String(today.getDate()).padStart(2, '0');
   let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
   let yyyy = today.getFullYear();
-
   today = yyyy + '-' + mm + '-' + dd
+  console.log( `Select vote,vote_datetime from Stock_Collection where User_email='${email}' and stock='${stock}' and  vote_datetime between '${today} 06:00:00' and '${today} 19:00:00'`)
   readconnection.query(
     `Select vote,vote_datetime from Stock_Collection where User_email='${email}' and stock='${stock}' and  vote_datetime between '${today} 06:00:00' and '${today} 19:00:00'`,
     function (err, result, fields) {
@@ -156,7 +180,8 @@ function stockpredictedtoday(email, stock, callback) {
         console.log(err)
         res.sendStatus(400);
       }
-      if (result[0]!=null && result[0].vote!=null) {
+      console.log(result,result[0])
+      if (result[0]!=null) {
         console.log(result[0],"->",result[0].vote," ",result[0].length)
         callback(true, result[0].vote, null);
       } else {
@@ -166,8 +191,17 @@ function stockpredictedtoday(email, stock, callback) {
   );
 }
 
-function adjustedvotevalue(votepost, votedb) {
+function adjustedvotevalue(email,votepost, votedb) {
+  console.log(votepost,votedb);
   if (votedb === votepost) {
+    writeconnection.query(
+      `Update Stock_Collection set total_repredictions=total_predictions-1 where User_email='${email}'`,
+      function (err, result) {
+        if (err) {
+          res.sendStatus(500);
+        }
+      }
+    )
     return 0;
   } else {
     return votepost;

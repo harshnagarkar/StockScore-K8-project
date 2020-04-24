@@ -49,14 +49,14 @@ class LayoutHeader extends React.Component {
   };
   render() {
     if (!this.state.user && window.location.pathname !== "/") {
-      return <Redirect to="/" />;
+      // return <Redirect to="/" />;
     }else if(!this.state.user && window.location.pathname === "/"){
       console.log("This is the header time")
       return (
         <Menu
           theme="white"
           mode="horizontal"
-          defaultSelectedKeys={["2"]}
+          defaultSelectedKeys={["3"]}
           className="menu"
           style={{ lineHeight: "64px" }}
         >
@@ -70,7 +70,7 @@ class LayoutHeader extends React.Component {
       <Menu
         theme="white"
         mode="horizontal"
-        defaultSelectedKeys={["2"]}
+        defaultSelectedKeys={["3"]}
         className="menu"
         style={{ lineHeight: "64px" }}
       >

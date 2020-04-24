@@ -89,7 +89,6 @@ router.get('/stocks/search', function (req, res, next) {
   jwt.verify(token, publicKEY, verifyOptionsJWT, function (err, decoded) {
     if (err) {
       res.sendStatus(401);
-      return
     } else {
       if (!req.query.term) {
         res.json({
@@ -105,6 +104,41 @@ router.get('/stocks/search', function (req, res, next) {
       }
     }
   })
+})
+
+
+router.get('/stocks/data/:stock', function (req, res, next) {
+  var token = req.cookies.token;
+  jwt.verify(token, publicKEY, verifyOptionsJWT, function (err, decoded) {
+    if (err) {
+      res.sendStatus(401);
+    } else {
+      influx.query(`Select * from "{stock_data}"`)
+    .then(result => {
+      console.log(result);
+      res.send(result)
+    }).catch(error => {
+      res.send(error)
+    })
+  }
+})
+
+router.get('/stocks/collection', function (req, res, next) {
+  var token = req.cookies.token;
+  jwt.verify(token, publicKEY, verifyOptionsJWT, function (err, decoded) {
+    if (err) {
+      res.sendStatus(401);
+    } else {
+      influx.query(`Select * from Stock_Collection where User_email='${decoded.email}'`)
+    .then(result => {
+      console.log(result);
+      res.send(result)
+    }).catch(error => {
+      res.send(error)
+    })
+  }
+})
+
 })
 
 

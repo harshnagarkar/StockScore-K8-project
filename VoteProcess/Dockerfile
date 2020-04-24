@@ -7,4 +7,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONUNBUFFERED=0
 COPY . .
 EXPOSE 80
-CMD [ "python","-u","./query.py" ]
+# CMD [ "python","-u", "./stockprocess.py" ]
+CMD [ "python","-u", "./voteprocess.py" ]
+
