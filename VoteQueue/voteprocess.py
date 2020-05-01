@@ -40,13 +40,14 @@ channel.queue_declare(queue='voteusers',durable=True)
 
 def heartbeat():
     while True:
-        connection.process_data_events()
         connection2.process_data_events()
+        connection.process_data_events()
         time.sleep(30)
-
-beat = threading.Thread(heartbeat)
+beat=threading.Thread(target=heartbeat)
 beat.daemon=True
 beat.start()
+
+
 
 def getDate():
     times = datetime.datetime.now()
@@ -70,8 +71,8 @@ def callback(ch, method, properties, body):
         for email in correctusers:
             channel2.basic_publish(exchange='',
                             routing_key='voteprocessusers',
-                            body=(f'{email[0]} {stock} 1 '+scale_fact))
-            print("sent "+email)
+                            body=(f'{email[0]} {stock} 1 {scale_fact} {correct_vote}'))
+            print("sent "+email[0])
     cursor.execute(f"SELECT User_email FROM Stock_Collection where stock='{stock}' and vote_datetime>='{date} 06:00:00' and vote={incorrect_vote}")
     incorrectusers = cursor.fetchall()
     print(incorrectusers)
@@ -79,17 +80,18 @@ def callback(ch, method, properties, body):
         for email in incorrectusers:
             channel2.basic_publish(exchange='',
                             routing_key='voteprocessusers',
-                            body=(f'{email[0]} {stock} 0 '+scale_fact))
+                            body=(f'{email[0]} {stock} 0 {scale_fact} {incorrect_vote}'))
             print("sent "+str(email[0]))
     print(" [x] Done")
     ch.basic_ack(delivery_tag = method.delivery_tag)
+
 
 # cursor.execute(f"SELECT * FROM Stock_Collection ")
 # correctusers = cursor.fetchall()
 # print(correctusers)
 channel2.basic_publish(exchange='',
                 routing_key='voteprocessusers',
-                body=(f'edsfact@gmail.com AAPL -1 '+str(10.5)))
+                body=('edsfact@gmail.com AAPL -1 '+str(-3)+" -1"))
 
 print("Done")
 channel.basic_consume(queue='voteusers', on_message_callback=callback)

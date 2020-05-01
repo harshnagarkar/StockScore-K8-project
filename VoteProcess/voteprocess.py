@@ -31,23 +31,19 @@ def callback(ch, method, properties, body):
     stock=data[1]
     deciding_factor=data[2]
     scaling_factoring=data[3]
-    try:
-        print(f"Update User set correct_predictions=(correct_predictions-{scaling_factoring}), accuracy=(correct_predictions-{scaling_factoring})/total_predictions where email='{email}'")
-        if int(deciding_factor)==1:
-            cursor.execute(f"Update User set correct_predictions=correct_predictions+{scaling_factoring}, accuracy=(correct_predictions+{scaling_factoring})/total_predictions where email='{email}'")
-            cursor.execute(f"Update Stock_Collection set recent_predictions=1, recent_correct=1, correct_predictions=correct_predictions+1 where User_email='{email}' and stock='{stock}'")
-        else:
-            cursor.execute(f"Update User set correct_predictions=(correct_predictions-{scaling_factoring}), accuracy=(correct_predictions-{scaling_factoring})/total_predictions where email='{email}'")
-            cursor.execute(f"Update Stock_Collection set recent_predictions=-1, recent_correct=-1, correct_predictions=correct_predictions+1 where User_email='{email}' and stock='{stock}' ")
-        # response = cursor.fetchall()
-        write.commit()
-
-        print(cursor.rowcount, "record inserted.")
-        # print(response)
-        print(f"processed: "+body.decode())
-    except:
-        print(f"not processed: "+body.decode())
-    
+    vote=data[4]
+    print(f"Update User set score=score+{scaling_factoring}, accuracy=(correct_predictions+1)/total_predictions, correct_predictions=correct_predictions+1 where email='{email}'")
+    if int(deciding_factor)==1:
+        cursor.execute(f"Update User set score=score+{scaling_factoring}, accuracy=(correct_predictions+1)/total_predictions*100, correct_predictions=correct_predictions+1 where email='{email}'")
+        cursor.execute(f"Update Stock_Collection set recent_predictions={vote}, recent_correct=1, correct_predictions=correct_predictions+1 where User_email='{email}' and stock='{stock}'")
+    else:
+        cursor.execute(f"Update User set score=(score+{scaling_factoring}), accuracy=correct_predictions/total_predictions*100 where email='{email}'")
+        cursor.execute(f"Update Stock_Collection set recent_predictions={vote}, recent_correct=-1 where User_email='{email}' and stock='{stock}' ")
+    # response = cursor.fetchall()
+    write.commit()
+    print(cursor.rowcount, "record inserted.")
+    # print(response)
+    print(f"processed: "+body.decode())
     ch.basic_ack(delivery_tag = method.delivery_tag)
     print(" [x] Done")
 

@@ -8,6 +8,7 @@ import numpy as np
 import pytz
 import datetime as datetime
 import threading
+import urllib.request
 #----------------------------------------------------------------------------------------------------
 client = InfluxDBClient(host='influxdb-1-influxdb-svc.influxdb.svc.cluster.local', port=8086, username='suser', password='mwxe2H3f8KybN')
 client.switch_database('stocks')
@@ -33,7 +34,7 @@ connection2 = pika.BlockingConnection(parameters2)
 channel2 = connection2.channel()
 channel2.queue_declare(queue="voteusers",durable=True)
 #--------------------------------------------------------------------------------------------------------
-def generate_Json(ticker,update,time,mins,maxs,stds,close):
+def generate_Json(ticker,update,time,mins,maxs,stds,close,beta):
     json_body =[{
         "measurement": f"{ticker}_data",
         "tags": {
@@ -44,7 +45,8 @@ def generate_Json(ticker,update,time,mins,maxs,stds,close):
             'Min':mins,
             'Max': maxs,
             'Volatility': stds,
-            'Close': close
+            'Close': close,
+            'Betas':beta
         }
     }]
     return json_body
@@ -63,12 +65,25 @@ def generateAns(old_close,new_close):
     if old_close<new_close:
         ans["correct"]=1
         ans["incorrect"]=(-1)
-        ans["scale_factor"]=(new_close-old_close)
+        ans["scale_factor"]=(new_close-old_close)/old_close*100
     else:
         ans["correct"]=(-1)
         ans["incorrect"]=(1)
-        ans["scale_factor"]=(new_close-old_close)
+        ans["scale_factor"]=(new_close-old_close)/old_close*100
     return ans
+
+
+def getBeta(stock):
+    beta=0
+    try:
+        url=f"https://cloud.iexapis.com/stable/stock/{stock}/stats?token=pk_30130b1429cc4960a527ba729ef868b5"
+        with urllib.request.urlopen(url) as url:
+            data = json.loads(url.read())
+            beta = data['beta']
+    except Exception as e:
+        print("error fetching",stock)
+        print(e)
+    return beta
 
 def getClose(stock):
     result = client.query(f'select Close from "{stock}_data" order by time desc limit 1')
@@ -96,13 +111,14 @@ def callback(ch, method, properties, body):
     maxs=df['2. high'].max()
     stds=np.std(df['4. close'].values.astype(float))
     close = float(df['4. close'].values[-1])
-    print(mins," ",maxs," ",stds," ",close)
+    beta=getBeta(body.decode())
+    print(mins," ",maxs," ",stds," ",close," ",beta)
     old_close = getClose(body.decode())
 
     ans=generateAns(old_close,close)
 
     tries=3
-    json_body=generate_Json(body.decode(),last_refresh,time,mins,maxs,stds,close)
+    json_body=generate_Json(body.decode(),last_refresh,time,mins,maxs,stds,close,beta)
     confirmed=client.write_points(json_body)
     print(confirmed)
     while (not confirmed) and tries>=0:
@@ -120,11 +136,12 @@ def callback(ch, method, properties, body):
     print("The message is send")
     ch.basic_ack(delivery_tag = method.delivery_tag)
 
+# channel2.basic_publish(exchange='',
+#                 routing_key='voteusers',
+#                 body=f'ABC -1 1 10')
 
-
-
+# print(getBeta("MSFT"))
 channel.basic_consume(queue='stock', on_message_callback=callback)
-
 print(' [*] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming()
 

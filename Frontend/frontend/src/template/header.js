@@ -49,7 +49,7 @@ class LayoutHeader extends React.Component {
   };
   render() {
     if (!this.state.user && window.location.pathname !== "/") {
-      // return <Redirect to="/" />;
+      return <Redirect to="/" />;
     }else if(!this.state.user && window.location.pathname === "/"){
       console.log("This is the header time")
       return (

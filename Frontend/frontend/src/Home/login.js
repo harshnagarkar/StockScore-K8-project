@@ -57,6 +57,7 @@ class Home extends React.Component {
         window.location.reload(false);
       } else {
         console.log("Error login: ", response);
+        alert("Error in Login Details")
       }
     });
   };

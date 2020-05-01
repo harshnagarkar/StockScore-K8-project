@@ -1,22 +1,27 @@
 import pika
-
+import logging
 import time
+from influxdb import InfluxDBClient
+import json
+import pandas as pd
+import numpy as np
+import pytz
+import datetime as datetime
+import threading
+import urllib.request
 
 
-credentials = pika.PlainCredentials('puser', 'mwxe2H3f8KybN')
-parameters = pika.ConnectionParameters('rabbitmq-1-rabbitmq-svc.rabbitmq.svc.cluster.local',
+credentials2 = pika.PlainCredentials('puser', 'mwxe2H3f8KybN')
+parameters2 = pika.ConnectionParameters('rabbitmq-1-rabbitmq-svc.rabbitmq.svc.cluster.local',
                                    5672,
                                    'stockvote',
-                                   credentials)
+                                   credentials2)
 
-connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
-channel.queue_declare(queue="voteusers",durable=True)
+connection2 = pika.BlockingConnection(parameters2)
+channel2 = connection2.channel()
+channel2.queue_declare(queue="voteusers",durable=True)
 
-for i in range(0,4):
-    channel.basic_publish(exchange='',
-                        routing_key='voteusers',
-                        body='M 1 -1 0.34')
-    time.sleep(5)
-    print(" [x] Sent 'Hello World!'")
+channel2.basic_publish(exchange='',
+                routing_key='voteusers',
+                body=f'ABC -1 1 10')
 

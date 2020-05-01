@@ -10,7 +10,7 @@ import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 class StockPage extends React.Component{
 
-    state={up:"#FF8C00",down:"#FF8C00",max:0,min:0,beta:0,volatility:0}
+    state={up:"#FF8C00",down:"#FF8C00",max:0,min:0,beta:0,volatility:0,stockavailable:true}
 
 
 
@@ -46,18 +46,21 @@ class StockPage extends React.Component{
             }
         }).catch(res=>{
             console.log(res)
+            this.setState({stockavailable:false})
         })
 
         axios.get(`http://35.238.192.112/stocks/data/${this.props.match.params.stockid}`).then(res=>{
-        this.setState({max:res.data.max,min:res.data.min,volatility:res.data.volatility,beta:res.data.beta})
+        this.setState({max:res.data.Max,min:res.data.Min,volatility:res.data.Volatility,beta:res.data.Betas})
         }).catch(res=>{
             console.log(res)
         })
+
     }
 
     render(){
         console.log(`CURRENCYCOM:${this.props.match.params.stockid}`);
-        return <div className="container">
+        if(this.state.stockavailable){
+            return <div className="container">
         <Row type="flex" justify="center">
             <Col className="center">
     <h1><Tag className="stockname" color="magenta">{this.props.match.params.stockid}</Tag></h1>
@@ -79,28 +82,28 @@ class StockPage extends React.Component{
            
             <Card>
             <h3> <Tag color="volcano" className="metric">MIN</Tag></h3><br/>
-               <h4>{this.state.min}</h4>
+               <h4>{parseFloat(this.state.min).toFixed(2)}</h4>
             </Card>
             </Col>
             <Col>
             
             <Card>
             <h3><Tag color="green" className="metric">Volatility</Tag></h3><br/>
-            <h4> {this.state.volatility}</h4>
+            <h4> {parseFloat(this.state.volatility).toFixed(2)}</h4>
             </Card>
             </Col>
             <Col>
            
             <Card>
             <h3><Tag color="geekblue" className="metric">BETA</Tag></h3><br/>
-             <h4> {this.state.beta}</h4>
+             <h4> {parseFloat(this.state.beta).toFixed(2)}</h4>
             </Card>
             </Col>
             <Col>
            
             <Card>
             <h3><Tag color="purple" className="metric">MAX</Tag></h3><br/>
-            <h4> {this.state.max}</h4>
+            <h4> {parseFloat(this.state.max).toFixed(2)}</h4>
             </Card>
             </Col>
         </Row>
@@ -120,6 +123,24 @@ class StockPage extends React.Component{
             </Col>
         </Row>
         </div>
+        }
+    else{
+        return <div className="container">
+        <Row type="flex" justify="center">
+        <Col className="center">
+        <h1><Tag className="stockname" color="magenta">{this.props.match.params.stockid}</Tag></h1>
+        </Col>
+        </Row>
+        <Row type="flex" justify="center">
+        <Col className="center" >
+        <TradingViewWidget symbol={`CURRENCYCOM:${this.props.match.params.stockid}`}/>
+        </Col>
+        </Row>
+        <Row className="center">
+            The stock is not available to vote on please contact the admin to add it
+        </Row>
+        </div>
+    }
     }
 }
 

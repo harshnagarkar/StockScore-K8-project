@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Form, Input, Button, Checkbox } from "antd";
-import profile from "../assets/profile.jpg";
+import profile from "../assets/default.jpg";
 import "./profile.css";
 import { Progress, Tag, Divider } from "antd";
 import { Table, Statistic } from "antd";
@@ -23,7 +23,7 @@ const Accuracy = (props) => (
           "0%": "#f5222d",
           "100%": "#ffa39e",
         }}
-        percent={props.accuracy}
+        percent={(props.accuracy*100).toFixed(2)}
       />
     </Col>
     &nbsp;&nbsp; &nbsp;&nbsp;
@@ -31,7 +31,7 @@ const Accuracy = (props) => (
       <h2>
         {" "}
         <Tag color="success" style={{ fontSize: "1.25em", padding: "0.25em" }}>
-          Correct-Predictions
+          Score
         </Tag>
       </h2>
       <br />
@@ -43,7 +43,7 @@ const Accuracy = (props) => (
         }}
         percent={100}
         format={(percent) => (
-          <div style={{ color: "rgba(0, 0, 0, 0.65)" }}>{props.correct_predictions} pts</div>
+          <div style={{ color: "rgba(0, 0, 0, 0.65)" }}>{parseFloat(props.score).toFixed(2)} pts</div>
         )}
       />
     </Col>
@@ -68,11 +68,15 @@ const Accuracy = (props) => (
 );
 
 class Users extends React.Component {
-  state={accuracy:0,correct_predictions:0,total_predictions:0}
+  state={accuracy:0,correct_predictions:0,total_predictions:0,score:0,name:""}
 
   componentDidMount() {
     axios.get("/user/data").then(res=>{
-      this.setState({accuracy:res.data.accuracy,correct_predictions:res.data.correct_predictions,total_predictions:res.data.total_predictions})
+      let acc=0;
+      if(res.data.accuracy>0){
+        acc=res.data.accuracy
+      }
+      this.setState({accuracy:acc,correct_predictions:res.data.correct_predictions,total_predictions:res.data.total_predictions,name:res.data.name,score:res.data.score})
     }).catch(res=>{
       console.log("Their is an error")
     })
@@ -102,9 +106,9 @@ class Users extends React.Component {
             className="center"
             style={{}}
           >
-            <h1> Harsh Nagarkar</h1>
+            <h1>{this.state.name}</h1>
             <br />
-            <Accuracy  accuracy={this.state.accuracy} correct_predictions={this.state.correct_predictions} total_predictions={this.state.total_predictions}/>
+            <Accuracy  accuracy={this.state.accuracy} score={this.state.score} total_predictions={this.state.total_predictions}/>
           </Col>
         </Row>
         <Divider />
