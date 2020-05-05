@@ -1,3 +1,4 @@
+#Just queue in users and votes to be process
 import pika
 import logging
 import time
@@ -6,6 +7,8 @@ import mysql.connector
 from pytz import timezone
 import os
 import threading
+
+#----------------------------------------------------------------
 read = mysql.connector.connect(
 host="mariadb-1-mariadb-secondary.mariadb.svc.cluster.local",
 user="Suser",
@@ -56,6 +59,8 @@ def getDate():
     else:
         return (datetime.datetime.now()-datetime.timedelta(days=1)).date().strftime('%y-%m-%d')
 
+#-------------------------------------------------------------------
+#Main function
 def callback(ch, method, properties, body):
     print(" [x] Received %r" % body)
     data = body.decode().split(" ")
@@ -86,14 +91,18 @@ def callback(ch, method, properties, body):
     ch.basic_ack(delivery_tag = method.delivery_tag)
 
 
+# ---------------------------------------------------
 # cursor.execute(f"SELECT * FROM Stock_Collection ")
 # correctusers = cursor.fetchall()
 # print(correctusers)
-channel2.basic_publish(exchange='',
-                routing_key='voteprocessusers',
-                body=('edsfact@gmail.com AAPL -1 '+str(-3)+" -1"))
 
-print("Done")
+# channel2.basic_publish(exchange='',
+#                 routing_key='voteprocessusers',
+#                 body=('edsfact@gmail.com AAPL -1 '+str(-3)+" -1"))
+
+# print("Done")
+#--------------------------------------------------------
+
 channel.basic_consume(queue='voteusers', on_message_callback=callback)
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
