@@ -74,6 +74,7 @@ def generateJSON(ticker,interval,last_refresh,time,feild_dict):
             json_body[0]['fields'][time[1]]=json.dumps(v)
     return json_body
 
+# Stock processing function
 def update_database():
     print("started updating")
     for symb in symbols:
