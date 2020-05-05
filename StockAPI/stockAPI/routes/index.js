@@ -21,6 +21,7 @@ app.use(
   })
 );
 
+//-------------------------------------------------------------jwt 
 var publicKEY = fs.readFileSync(
   path.join(__dirname, "../keys/public.key"),
   "utf8"
@@ -44,17 +45,10 @@ var stocksData = stocksData.replace(/ /g, "");
 var stocksData = stocksData.replace(/\'/g, "");
 var stocksData = stocksData.split(",");
 
-// var stocksData= fs.createReadStream('stocks/s&p500.csv')
-// .pipe(csv())
-// .on('data', (row) => {
-//   console.log(row);
-// })
-// .on('end', () => {
-//   console.log('CSV file successfully processed');
-// });
+
 console.log(stocksData);
 
-// console.log(stocksData.indexOf(element => element.includes("E")))
+//--------------------------------------------------------------database
 const influx = new Influx.InfluxDB(
   `http://suser:mwxe2H3f8KybN@influxdb-1-influxdb-svc.influxdb.svc.cluster.local:8086/stocks`
 );
@@ -84,6 +78,8 @@ writeconnection.connect(function (err) {
     console.log('error when connecting to db:', err);
   }
 })
+
+//-----------------------------------------------------------------------main functions
 
 function search(arr, val) {
   var query = [];
