@@ -1,3 +1,4 @@
+//Gets the metrics for the users and personal information
 var express = require("express");
 var router = express.Router();
 const fs = require("fs");
@@ -11,7 +12,7 @@ const multer = require("multer");
 var app = express();
 
 
-
+//--------------------------------------------------------------------
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(
@@ -50,12 +51,12 @@ var options = {
 //----------------------------------------------fileupload-------------------------------------------------------------------------------
 var storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, "/mnt"); //here we specify the destination. in this case i specified the current directory
+    cb(null, "/mnt");
+    
   },
   filename: function(req, file, cb) {
-    console.log(file); //log the file object info in console
-    cb(null, file.fieldname + '-' + Date.now() + '.' + file.originalname.split('.')[file.originalname.split('.').length -1]);//here we specify the file saving name. in this case. 
-//i specified the original file name .you can modify this name to anything you want
+    console.log(file);
+    cb(null, file.fieldname + '-' + Date.now() + '.' + file.originalname.split('.')[file.originalname.split('.').length -1]);
   }
 });
 
