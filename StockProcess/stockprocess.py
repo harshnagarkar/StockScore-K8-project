@@ -1,3 +1,4 @@
+# Process stocks individually as they are received one by one from the stock fetch service
 import pika
 import logging
 import time
@@ -91,6 +92,7 @@ def getClose(stock):
     close = result.pop("Close")
     return close
 
+# Main processing function
 def callback(ch, method, properties, body):
     print('--',body.decode(),'--')
     result = client.query(f'select * from "{body.decode()}" order by time desc limit 1')
