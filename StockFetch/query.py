@@ -1,3 +1,4 @@
+# Queries stock data one by one from alphavantage pro 
 import urllib.request
 import schedule
 import time
