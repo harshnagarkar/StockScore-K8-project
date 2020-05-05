@@ -1,4 +1,4 @@
-//imports
+//provides authentication for the whole web app
 'use strict';
 var express = require('express');
 var router = express.Router();
@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }))
 
-//mysql connection
+//----------------------------------------------------------mysql connection
 var writeconnection = mysql.createConnection({
   host: "mariadb-1-mariadb.mariadb.svc.cluster.local",
   user: "Suser",
@@ -46,7 +46,7 @@ readconnection.connect(function (err) {
   }
 })
 
-//jwt initialization global parameters
+//-----------------------------------------------------------------------jwt initialization global parameters
 var refreshTokens = {}
 var privateKEY = fs.readFileSync(path.join(__dirname, '../keys/private.key'), 'utf8');
 var publicKEY = fs.readFileSync(path.join(__dirname, '../keys/public.key'), 'utf8');
@@ -89,7 +89,7 @@ var verifyOptionsRT = {
 };
 
 
-//auth function
+//--------------------------------------------------------------auth function
 
 /* GET home page. */
 router.get('/auth', function (req, res, next) {
