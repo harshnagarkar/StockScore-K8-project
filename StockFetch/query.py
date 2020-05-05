@@ -7,6 +7,7 @@ import pytz
 import datetime
 import pika
 import threading
+
 credentials = pika.PlainCredentials('suser', 'mwxe2H3f8KybN')
 parameters = pika.ConnectionParameters('rabbitmq-1-rabbitmq-svc.rabbitmq.svc.cluster.local',
                                    5672,
@@ -16,9 +17,9 @@ parameters = pika.ConnectionParameters('rabbitmq-1-rabbitmq-svc.rabbitmq.svc.clu
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 channel.queue_declare(queue="stock",durable=False)
-
+#----------------------------------------------------------------------------------
 CST=pytz.timezone('America/Chicago')
-
+#---------------------------------------------------------------------------------------
 f = open("alphavantage.txt", "r")
 alphavantageKey=f.readline()
 
@@ -28,10 +29,11 @@ line=line.replace("'","")
 line=line.replace("\\s+","")
 symbols=line.split(",")
 
-
+#-------------------------------------------------------------------------------------
 client = InfluxDBClient(host='influxdb-1-influxdb-svc.influxdb.svc.cluster.local', port=8086, username='suser', password='mwxe2H3f8KybN')
 client.switch_database('stocks')
 
+#------------------------------------------------------------------------------
 def heartbeat():
     while True:
         connection.process_data_events()
