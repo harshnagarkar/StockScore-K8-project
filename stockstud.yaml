@@ -16,6 +16,50 @@ kind: Namespace
 metadata:
   name: rabbitmq
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: userapi
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vote
+---
+##################################################################################################
+# Persistent Volume
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: user-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/disks/photos"
+---
+##################################################################################################
+# Persistent Volume Claim
+##################################################################################################
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: user-claim
+  namespace: userapi
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+---
 ##################################################################################################
 # Auth service
 ##################################################################################################
@@ -67,7 +111,12 @@ spec:
         image: docker.io/hknagark/auth:latest
         #imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080  
+        - containerPort: 8080
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m
 ---
 ##################################################################################################
 # Stock API service
@@ -86,6 +135,8 @@ spec:
     name: http
   - port: 8086
     name: influx
+  - port: 3306
+    name: mysql
   selector:
     app: stockapi
 ---
@@ -106,7 +157,7 @@ metadata:
     app: stockapi
     version: v1
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: stockapi
@@ -123,7 +174,166 @@ spec:
         image: docker.io/hknagark/stockapi:latest
         #imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080  
+        - containerPort: 8080
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
+---
+##################################################################################################
+# Vote service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote
+  namespace: vote
+  labels:
+    app: vote
+    service: vote
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: vote
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-vote
+  namespace: vote
+  labels:
+    account: vote
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-v1
+  namespace: vote
+  labels:
+    app: vote
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vote
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: vote
+        version: v1
+    spec:
+      serviceAccountName: stockstud-vote
+      containers:
+      - name: vote
+        image: docker.io/hknagark/vote:latest
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
+---
+##################################################################################################
+# Vote Queue service
+##################################################################################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-votequeue
+  namespace: vote
+  labels:
+    account: votequeue
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: votequeue-v1
+  namespace: vote
+  labels:
+    app: votequeue
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: votequeue
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: votequeue
+        version: v1
+    spec:
+      serviceAccountName: stockstud-votequeue
+      containers:
+      - name: voteprocess
+        image: docker.io/hknagark/votequeue:latest
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "0"
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
+---
+
+##################################################################################################
+# Vote Process service
+##################################################################################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-voteprocess
+  namespace: vote
+  labels:
+    account: voteprocess
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voteprocess-v1
+  namespace: vote
+  labels:
+    app: voteprocess
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: voteprocess
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: voteprocess
+        version: v1
+    spec:
+      serviceAccountName: stockstud-voteprocess
+      containers:
+      - name: voteprocess
+        image: docker.io/hknagark/voteprocess:latest
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "0"
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
 ---
 ##################################################################################################
 # Stock fetch service
@@ -177,9 +387,132 @@ spec:
       containers:
       - name: stockfetch
         image: docker.io/hknagark/stockfetch:latest
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "0"
         #imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80  
+        - containerPort: 80
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
+---
+##################################################################################################
+# Stock Process service
+##################################################################################################
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-stockprocess
+  namespace: stockapi
+  labels:
+    account: stockprocess
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockprocess-v1
+  namespace: stockapi
+  labels:
+    app: stockprocess
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockprocess
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: stockprocess
+        version: v1
+    spec:
+      serviceAccountName: stockstud-stockprocess
+      containers:
+      - name: stockprocess
+        image: docker.io/hknagark/stockprocess:latest
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "0"
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m  
+---
+##################################################################################################
+# User service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+  namespace: userapi
+  labels:
+    app: user
+    service: user
+spec:
+  ports:
+  - port: 8080
+    name: http
+  - port: 3306
+    name: mysql
+  selector:
+    app: user
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stockstud-user
+  namespace: userapi
+  labels:
+    account: user
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-v1
+  namespace: userapi
+  labels:
+    app: user
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: user
+        version: v1
+    spec:
+      serviceAccountName: stockstud-user
+      containers:
+      - name: user
+        image: docker.io/hknagark/userapi:latest
+        #imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m
+        volumeMounts:
+        - mountPath: "/mnt"
+          name: user-storage
+      volumes:
+      - name: user-storage
+        persistentVolumeClaim:
+          claimName: user-claim 
 ---
 ##################################################################################################
 # frontend
@@ -210,22 +543,22 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-v1
+  name: frontend-v2
   namespace: frontend
   labels:
     app: frontend
-    version: v1
+    version: v2
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: frontend
-      version: v1
+      version: v2
   template:
     metadata:
       labels:
         app: frontend
-        version: v1
+        version: v2
     spec:
       serviceAccountName: stockstud-frontend
       containers:
@@ -233,5 +566,10 @@ spec:
         image: docker.io/hknagark/frontend:latest
         #imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80 
+        - containerPort: 80
+        resources:
+            limits:
+                cpu: 300m
+            requests:
+                cpu: 200m 
 ---

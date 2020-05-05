@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2020-04-01 04:59:07.854
+-- Last modification date: 2020-04-28 21:06:26.157
 
 -- tables
 -- Table: Auth_token
@@ -38,22 +38,24 @@ CREATE TABLE Stock_Collection (
     User_email varchar(255) NOT NULL,
     stock varchar(6) NOT NULL,
     vote bool NOT NULL,
-    vote_price int NULL,
     vote_datetime timestamp NULL,
     recent_predictions int NULL,
-    total_predictiond int NULL,
-    correct_prediction int NULL,
+    recent_correct bool NOT NULL,
+    total_predictions int NULL,
+    correct_predictions int NULL,
     CONSTRAINT Stock_Collection_pk PRIMARY KEY (User_email,stock)
 );
 
 -- Table: User
 CREATE TABLE User (
     email varchar(255) NOT NULL,
-    password varchar(128) NULL,
-    reputation int NOT NULL DEFAULT 1,
-    totalprediction int NOT NULL DEFAULT 0,
-    correctpredictions int NOT NULL DEFAULT 0,
+    password varchar(128) NOT NULL,
+    accuracy int NOT NULL DEFAULT 1,
+    total_predictions int NOT NULL DEFAULT 0,
+    correct_predictions double(10,10) NOT NULL DEFAULT 0,
     name varchar(200) NOT NULL,
+    profileimage varchar(10000) NULL,
+    score double(10,10) NOT NULL,
     CONSTRAINT User_pk PRIMARY KEY (email)
 );
 

@@ -45,6 +45,22 @@ spec:
         host: stockapi.stockapi.svc.cluster.local
         port:
           number: 8080
+  - match:
+    - uri:
+        prefix: /vote
+    route:
+    - destination:
+        host: vote.vote.svc.cluster.local
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: /user
+    route:
+    - destination:
+        host: user.userapi.svc.cluster.local
+        port:
+          number: 8080  
   - route:
     - destination: 
         host: frontend.frontend.svc.cluster.local
