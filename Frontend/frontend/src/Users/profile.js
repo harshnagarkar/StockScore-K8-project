@@ -1,3 +1,4 @@
+//main dashboard page
 import React from "react";
 import { Row, Col, Form, Input, Button, Checkbox } from "antd";
 import profile from "../assets/default.jpg";
