@@ -1,9 +1,10 @@
+#Process vote for one user for one stock at a time
 import pika
 import logging
 import time
 import datetime as datetime
 import mysql.connector
-
+#---------------------------------------------------------------
 write = mysql.connector.connect(
 host="mariadb-1-mariadb.mariadb.svc.cluster.local",
 user="Suser",
@@ -11,7 +12,7 @@ passwd="<mwxe2H/3f8Kyb$N",
 database='stockUser'
 )
 cursor = write.cursor()
-
+#-------------------------------------------------------
 
 credentials = pika.PlainCredentials('vcuser', 'mwxe2H3f8KybN')
 parameters = pika.ConnectionParameters('rabbitmq-1-rabbitmq-svc.rabbitmq.svc.cluster.local',
@@ -23,7 +24,9 @@ connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 
 channel.queue_declare(queue='voteprocessusers',durable=True)
+#------------------------------------------------------------
 
+#main function
 def callback(ch, method, properties, body):
     print(" [x] Received %r" % body)
     data = body.decode().split(" ")
@@ -49,7 +52,7 @@ def callback(ch, method, properties, body):
 
 
 
-
+#-------------------------------------------------------
 channel.basic_consume(queue='voteprocessusers', on_message_callback=callback)
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
